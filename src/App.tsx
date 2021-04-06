@@ -1,10 +1,13 @@
 import './App.css';
 import React from 'react';
-import { spotifyKeys } from './keys';
+import RelatedArtist from './RelatedArtist';
 
-type Props = {};
 
-type State = {artistSearch: string, relatedArtists:any };
+interface Props {};
+
+interface relatedArtist { name:string, imgUrl:string }
+
+interface State {artistSearch: string, spotifyToken: string, relatedArtists:relatedArtist[]};
 
 export class App extends React.Component<Props, State>{
 
@@ -13,7 +16,8 @@ export class App extends React.Component<Props, State>{
 
     this.state = {
       artistSearch: "",
-      relatedArtists: ""
+      spotifyToken: "",
+      relatedArtists: []
     }
 
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -21,30 +25,69 @@ export class App extends React.Component<Props, State>{
   }
 
   componentDidMount = () => {
-    let formData = new FormData();
-    let clientId = spotifyKeys.clientId
-    let clientSecret = spotifyKeys.clientSecret
-    let spotifyUrl = "https://accounts.spotify.com/api/token"
+    let tokenUrl = "http://localhost:9000/token"
 
-    formData.append("grant_type","client_crendentials");
-    formData.append("Authorization",`Basic ${btoa(clientId+":"+clientSecret)}`);
-
-    console.log(formData)
-
-    fetch(spotifyUrl, {
-      method: `POST`,
-      body: formData,
+    fetch(tokenUrl, {
+      method: `GET`,
     })
     .then(response => response.json())
-    .then(data => console.log(data));  
+    .then(data => this.setState({spotifyToken: data.access_token}));  
   }
 
-  handleSubmit = () => {
+  handleSubmit = (event: { preventDefault: () => void; }) => {
+    let spotfiySearchUrl = "https://api.spotify.com/v1/search?q=" + this.state.artistSearch + "&type=artist"
+    var artistId = "";
 
+    console.log(spotfiySearchUrl);
+
+    fetch(spotfiySearchUrl, {
+      method: "GET",
+      headers: {
+        'Authorization': 'Bearer ' + this.state.spotifyToken
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      //console.log(data.artists.items[0].id);
+      artistId = data.artists.items[0].id
+    })
+    .then( () => {
+      if(artistId!==""){
+        this.relatedSearch(artistId);
+      }
+    })
+
+    event.preventDefault();
   };
 
   handleChange = (event: { target: { value: string } }) => {
     this.setState({artistSearch: event.target.value});
+  }
+
+  relatedSearch = (artistId: string) => {
+    let spotfyRelatedUrl = "https://api.spotify.com/v1/artists/" + artistId + "/related-artists"
+
+    fetch(spotfyRelatedUrl,{
+      method: "GET",
+      headers: {
+        'Authorization': 'Bearer ' + this.state.spotifyToken
+      }
+    })
+    .then(response => response.json())
+    .then((data) => {
+      let relArts:relatedArtist[] = [];
+
+      for(var i = 0; i < data.artists.length; i++){
+        relArts.push({name:data.artists[i].name, imgUrl:data.artists[i].images[0].url})
+      }
+      
+      console.log(relArts)
+      console.log(data.artists[0])
+
+      this.setState({relatedArtists:relArts});
+      console.log(this.state.relatedArtists)
+    });
+
   }
 
   render(){
@@ -58,8 +101,12 @@ export class App extends React.Component<Props, State>{
             <input type="text" value={this.state.artistSearch} onChange={this.handleChange}/>    
         </label>
         <input type="submit" value="tyl" />
-
       </form>
+
+      {this.state.relatedArtists.map((artist: relatedArtist) => {
+        return <RelatedArtist name={artist.name} imgUrl={artist.imgUrl} />
+      })}
+
     </div>
   );
 }
