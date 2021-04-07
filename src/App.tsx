@@ -5,7 +5,7 @@ import RelatedArtist from './RelatedArtist';
 
 interface Props {};
 
-interface relatedArtist { name:string, imgUrl:string }
+interface relatedArtist { name:string, imgUrl:string, spotifyUrl:string }
 
 interface State {artistSearch: string, spotifyToken: string, relatedArtists:relatedArtist[]};
 
@@ -78,7 +78,7 @@ export class App extends React.Component<Props, State>{
       let relArts:relatedArtist[] = [];
 
       for(var i = 0; i < data.artists.length; i++){
-        relArts.push({name:data.artists[i].name, imgUrl:data.artists[i].images[0].url})
+        relArts.push({name:data.artists[i].name, imgUrl:data.artists[i].images[0].url, spotifyUrl: data.artists[i].external_urls.spotify})
       }
       
       console.log(relArts)
@@ -93,19 +93,23 @@ export class App extends React.Component<Props, State>{
   render(){
   return (
     <div className="App">
-      <h1>ily</h1>
+        <h1>ily</h1>
 
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          Artist: 
-            <input type="text" value={this.state.artistSearch} onChange={this.handleChange}/>    
-        </label>
-        <input type="submit" value="tyl" />
-      </form>
+        <form onSubmit={this.handleSubmit}>
+          <label>
+            Artist: 
+              <input type="text" value={this.state.artistSearch} onChange={this.handleChange}/>    
+          </label>
+          <input type="submit" value="tyl" />
+        </form>
 
-      {this.state.relatedArtists.map((artist: relatedArtist) => {
-        return <RelatedArtist name={artist.name} imgUrl={artist.imgUrl} />
-      })}
+      <div className="artists-container" >
+
+        {this.state.relatedArtists.map((artist: relatedArtist) => {
+          return <RelatedArtist name={artist.name} imgUrl={artist.imgUrl} spotifyUrl={artist.spotifyUrl} token={this.state.spotifyToken} />
+        })}
+
+      </div>
 
     </div>
   );

@@ -1,0 +1,15 @@
+img{
+	background-size:cover;
+	background-position:50%;
+	height:200px;
+	width:200px;
+	border: 5px solid #f1f1f1;
+	margin:8px 25px;
+	box-shadow:0 3px 6px rgba(0,0,0,.16), 0 3px 6px rgba(0,0,0,.23);
+}
+
+img:hover{
+	transform:scale(1.05);
+	transition:.1s;
+}
+
